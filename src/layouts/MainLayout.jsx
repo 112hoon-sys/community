@@ -6,7 +6,7 @@ import { Home, FileText, User } from 'lucide-react';
 
 export default function MainLayout() {
   const location = useLocation();
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const { t } = useLanguage();
   const isHome = location.pathname === '/';
 
@@ -28,7 +28,7 @@ export default function MainLayout() {
             </Link>
 
             {user ? (
-              <button type="button" onClick={logout} className="nav-user">
+              <Link to="/profile" className={`nav-user ${location.pathname === '/profile' ? 'active' : ''}`}>
                 <div className="avatar-wrapper">
                   {user.picture ? (
                     <img src={user.picture} alt="" className="avatar-img" />
@@ -37,7 +37,7 @@ export default function MainLayout() {
                   )}
                 </div>
                 <span className="user-name">{user.name}</span>
-              </button>
+              </Link>
             ) : (
               <Link to="/login" className={location.pathname === '/login' ? 'active' : ''}>
                 <User size={18} />

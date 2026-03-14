@@ -31,9 +31,6 @@ const SAMPLE_POSTS = {
     { title: '안산 병원 추천', content: '외국인 진료 잘 보는 병원 추천 부탁드립니다.' },
     { title: '수원 맛집 추천', content: '가성비 좋은 맛집 공유합니다.' }
   ],
-  nationality: [
-    { title: '베트남 커뮤니티 모임', content: '이번 주말 모임 같이 하실 분?' }
-  ],
   job: [
     { title: '카페 주말 알바 구해요', content: '주말 오전 카페 알바 구인합니다.' },
     { title: '물류 야간 포장', content: '야간 포장 알바, 로테이션 근무.' }
@@ -46,6 +43,20 @@ const SAMPLE_POSTS = {
     { title: '송금 수수료 비교', content: '서비스별 송금 수수료 비교 공유.' }
   ]
 };
+
+const COMMUNITY_ROOMS = [
+  { key: 'vn', nameKo: '베트남', nameEn: 'Vietnam', description: '베트남 커뮤니티 오픈채팅' },
+  { key: 'cn', nameKo: '중국', nameEn: 'China', description: '중국 커뮤니티 오픈채팅' },
+  { key: 'th', nameKo: '태국', nameEn: 'Thailand', description: '태국 커뮤니티 오픈채팅' },
+  { key: 'id', nameKo: '인도네시아', nameEn: 'Indonesia', description: '인도네시아 커뮤니티 오픈채팅' },
+  { key: 'ph', nameKo: '필리핀', nameEn: 'Philippines', description: '필리핀 커뮤니티 오픈채팅' },
+  { key: 'my', nameKo: '말레이시아', nameEn: 'Malaysia', description: '말레이시아 커뮤니티 오픈채팅' },
+  { key: 'np', nameKo: '네팔', nameEn: 'Nepal', description: '네팔 커뮤니티 오픈채팅' },
+  { key: 'kh', nameKo: '캄보디아', nameEn: 'Cambodia', description: '캄보디아 커뮤니티 오픈채팅' },
+  { key: 'mm', nameKo: '미얀마', nameEn: 'Myanmar', description: '미얀마 커뮤니티 오픈채팅' },
+  { key: 'en', nameKo: '영어권', nameEn: 'English', description: '영어권 커뮤니티 오픈채팅' },
+  { key: 'other', nameKo: '기타국가', nameEn: 'Others', description: '기타 국가 커뮤니티 오픈채팅' }
+];
 
 async function main() {
   for (const b of BOARDS) {
@@ -90,6 +101,15 @@ async function main() {
     console.log(`${board.nameEn} seeded (${posts.length})`);
   }
   console.log('Sample posts seeded');
+
+  for (const room of COMMUNITY_ROOMS) {
+    await prisma.communityRoom.upsert({
+      where: { key: room.key },
+      create: room,
+      update: room
+    });
+  }
+  console.log('Community rooms seeded');
 }
 
 main()

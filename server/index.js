@@ -13,6 +13,8 @@ import { notificationRoutes } from './routes/notifications.js';
 import { translateRoutes } from './routes/translate.js';
 import { chatRoutes } from './routes/chats.js';
 import { pushRoutes } from './routes/push.js';
+import { userRoutes } from './routes/users.js';
+import { roomRoutes } from './routes/rooms.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.join(__dirname, '../.env') });
@@ -34,6 +36,8 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/translate', translateRoutes);
 app.use('/api/chats', chatRoutes);
 app.use('/api/push', pushRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/rooms', roomRoutes);
 
 app.get('/api/health', (_, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });

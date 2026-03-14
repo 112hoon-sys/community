@@ -13,7 +13,9 @@ export default function PostWritePage() {
   const { user } = useAuth();
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
-  const [boardKey, setBoardKey] = useState(boardParam);
+  const selectableBoards = BOARDS.filter((b) => b.key !== 'nationality');
+  const safeBoard = selectableBoards.find((b) => b.key === boardParam)?.key || selectableBoards[0]?.key || 'life';
+  const [boardKey, setBoardKey] = useState(safeBoard);
   const [submitting, setSubmitting] = useState(false);
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState('');
@@ -25,7 +27,8 @@ export default function PostWritePage() {
       .then((p) => {
         setTitle(p.title || '');
         setContent(p.content || '');
-        setBoardKey(p.board?.key || boardParam);
+        const nextKey = p.board?.key || boardParam;
+        setBoardKey(nextKey === 'nationality' ? safeBoard : nextKey);
         if (p.imageUrl) {
           setInitialImageUrl(p.imageUrl);
           setImagePreview(p.imageUrl);
@@ -85,7 +88,7 @@ export default function PostWritePage() {
           onChange={(e) => setBoardKey(e.target.value)}
           required
         >
-          {BOARDS.map((b) => (
+          {selectableBoards.map((b) => (
             <option key={b.key} value={b.key}>
               {b.nameKo}
             </option>

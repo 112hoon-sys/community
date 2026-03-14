@@ -2,7 +2,7 @@
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 import LangSelector from './LangSelector';
-import { fetchPosts, fetchNotifications } from '../lib/api';
+import { fetchPosts, fetchNotifications, fetchCommunityRooms } from '../lib/api';
 import TranslatableText from './TranslatableText';
 import { useAuth } from '../contexts/AuthContext';
 import {
@@ -49,11 +49,27 @@ const MainDashboard = () => {
   const [marketStatus, setMarketStatus] = useState('loading');
   const [jobItems, setJobItems] = useState([]);
   const [jobStatus, setJobStatus] = useState('loading');
+  const [communityRooms, setCommunityRooms] = useState([]);
+  const [communityStatus, setCommunityStatus] = useState('idle');
 
   const [modalItem, setModalItem] = useState(null);
   const [showNotif, setShowNotif] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const notifRef = useRef(null);
+
+  const roomFlags = {
+    vn: '🇻🇳',
+    cn: '🇨🇳',
+    th: '🇹🇭',
+    id: '🇮🇩',
+    ph: '🇵🇭',
+    my: '🇲🇾',
+    np: '🇳🇵',
+    kh: '🇰🇭',
+    mm: '🇲🇲',
+    en: '🌐',
+    other: '✨'
+  };
 
   useEffect(() => {
     if (!user?.sub) return;
@@ -248,6 +264,7 @@ const MOCK_TRENDING_EN = [
             likes,
             time,
             imageUrl: post.imageUrl || '',
+            authorPicture: post.author?.picture || '',
             authorName: post.author?.name || '',
             tag: post.board?.nameKo || post.board?.nameEn || boardKey,
             category,
@@ -266,8 +283,10 @@ const MOCK_TRENDING_EN = [
     };
 
     load();
+    const intervalId = setInterval(load, 5000);
     return () => {
       cancelled = true;
+      clearInterval(intervalId);
     };
   }, [ctxLang]);
 
@@ -360,6 +379,20 @@ const MOCK_TRENDING_EN = [
   }, [ctxLang, locale, t.marketItems, t.jobItems]);
 
   useEffect(() => {
+    if (feedFilter !== 'nationality') return;
+    setCommunityStatus('loading');
+    fetchCommunityRooms()
+      .then((rooms) => {
+        setCommunityRooms(rooms || []);
+        setCommunityStatus('success');
+      })
+      .catch(() => {
+        setCommunityRooms([]);
+        setCommunityStatus('error');
+      });
+  }, [feedFilter]);
+
+  useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const sort = params.get('sort');
     const filter = params.get('filter');
@@ -448,6 +481,12 @@ const MOCK_TRENDING_EN = [
   );
 
   const visiblePosts = filteredPosts.slice(0, 8);
+  const filteredRooms = communityRooms.filter((room) => {
+    if (!normalizedQuery) return true;
+    return [room.nameKo, room.nameEn, room.description, room.lastMessage]
+      .filter(Boolean)
+      .some((field) => field.toLowerCase().includes(normalizedQuery));
+  });
 
   const openModal = (item, type) => {
     setModalItem({ ...item, type });
@@ -478,7 +517,7 @@ const MOCK_TRENDING_EN = [
           />
           {user ? (
             <div className="header-user">
-              <div className="header-user-badge" title={user.name || user.email || ''}>
+              <Link to="/profile" className="header-user-badge" title={user.name || user.email || ''}>
                 <span className="avatar-wrapper" aria-hidden="true">
                   {user.picture ? (
                     <img src={user.picture} alt="" className="avatar-img" />
@@ -489,7 +528,7 @@ const MOCK_TRENDING_EN = [
                   )}
                 </span>
                 <span className="user-name">{user.name || user.email || 'User'}</span>
-              </div>
+              </Link>
               <button type="button" className="logout-button" onClick={logout}>
                 {t.logout || 'Logout'}
               </button>
@@ -894,39 +933,82 @@ const MOCK_TRENDING_EN = [
               <p className="feed-status error">{t.feedError}</p>
             )}
             {feedStatus === 'success' && (
-              <div className="feed">
-                {visiblePosts.map((post) => (
-                  <article
-                    key={post.id}
-                    className="feed-card"
-                    onClick={() => navigate(`/post/${post.id}`)}
-                    style={{ cursor: 'pointer' }}
-                  >
-                    <div className="feed-row">
-                      {post.imageUrl && (
+              <>
+                {feedFilter === 'nationality' ? (
+                  <div className="community-room-list">
+                    {communityStatus === 'loading' && (
+                      <p className="feed-status">{t.feedLoading}</p>
+                    )}
+                    {communityStatus === 'error' && (
+                      <p className="feed-status error">{t.feedError}</p>
+                    )}
+                    {communityStatus === 'success' && filteredRooms.length === 0 && (
+                      <p className="feed-status">아직 채팅방이 없습니다.</p>
+                    )}
+                    {communityStatus === 'success' && filteredRooms.map((room) => (
+                      <Link key={room.id} to={`/community/${room.id}`} className="community-room-card">
+                        <div className="room-flag">
+                          <span>{roomFlags[room.key] || '🌏'}</span>
+                        </div>
+                        <div className="room-main">
+                          <div className="room-head">
+                            <h3>{room.nameKo}</h3>
+                            <span className="community-room-count">{room._count?.messages ?? 0}개 대화</span>
+                          </div>
+                          <p className="room-desc">{room.description}</p>
+                          <div className="room-meta">
+                            <span className="room-last">
+                              {room.lastMessage || '첫 대화를 시작해보세요.'}
+                            </span>
+                            {room.lastMessageAt && (
+                              <time>
+                                {new Date(room.lastMessageAt).toLocaleTimeString('ko-KR', {
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                })}
+                              </time>
+                            )}
+                          </div>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="feed">
+                    {visiblePosts.map((post) => (
+                      <article
+                        key={post.id}
+                        className="feed-card"
+                        onClick={() => navigate(`/post/${post.id}`)}
+                        style={{ cursor: 'pointer' }}
+                      >
+                        <div className="feed-row">
+                      {(post.authorPicture || post.imageUrl) && (
                         <div
                           className="avatar"
                           style={{
-                            backgroundImage: `url(${post.imageUrl})`,
+                            backgroundImage: `url(${post.authorPicture || post.imageUrl})`,
                             backgroundSize: 'cover',
                             backgroundPosition: 'center'
                           }}
                         />
                       )}
-                      <div>
-                        <p className="feed-author">{post.authorName || post.author?.name || "익명"}</p>
-                        <p className="feed-title"><TranslatableText text={post.title} tag="span" /></p>
-                      </div>
-                    </div>
-                    <div className="feed-meta">
-                      <span>Comments {post.comments}</span>
-                      <span>Likes {post.likes}</span>
-                      <span>{post.time}</span>
-                      <span className="feed-tag">{post.tag}</span>
-                    </div>
-                  </article>
-                ))}
-              </div>
+                          <div>
+                            <p className="feed-author">{post.authorName || post.author?.name || "익명"}</p>
+                            <p className="feed-title"><TranslatableText text={post.title} tag="span" /></p>
+                          </div>
+                        </div>
+                        <div className="feed-meta">
+                          <span>Comments {post.comments}</span>
+                          <span>Likes {post.likes}</span>
+                          <span>{post.time}</span>
+                          <span className="feed-tag">{post.tag}</span>
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                )}
+              </>
             )}
           </section>
         </aside>

@@ -35,10 +35,19 @@ export default function BoardListPage() {
   const searchQuery = new URLSearchParams(location.search).get('search')?.trim() || '';
 
   useEffect(() => {
-    fetchBoards()
-      .then(setBoards)
-      .catch(() => setBoards([]))
-      .finally(() => setLoading(false));
+    let mounted = true;
+    const load = () => {
+      fetchBoards()
+        .then((data) => mounted && setBoards(data))
+        .catch(() => mounted && setBoards([]))
+        .finally(() => mounted && setLoading(false));
+    };
+    load();
+    const intervalId = setInterval(load, 5000);
+    return () => {
+      mounted = false;
+      clearInterval(intervalId);
+    };
   }, []);
 
   useEffect(() => {

@@ -18,6 +18,12 @@ postRoutes.get('/', async (req, res) => {
       });
       return res.json(posts);
     }
+    if (boardKey === 'nationality') {
+      return res.json([]);
+    }
+    if (boardKey === 'nationality') {
+      return res.status(400).json({ error: '국적/언어 커뮤니티는 오픈채팅으로 운영됩니다.' });
+    }
     const board = await prisma.board.findUnique({ where: { key: boardKey } });
     if (!board) return res.status(404).json({ error: '게시판 없음' });
     const posts = await prisma.post.findMany({

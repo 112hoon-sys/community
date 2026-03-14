@@ -87,9 +87,10 @@ chatRoutes.get('/threads', async (req, res) => {
 
       const mapped = threads.map((t) => {
         const last = t.messages[0];
+        const lastLabel = last?.content || (last?.imageUrl ? '사진' : '');
         return {
           ...t,
-          lastMessage: last?.content || '',
+          lastMessage: lastLabel,
           lastMessageAt: last?.createdAt || t.lastMessageAt,
           unreadCount: t.messages.length ? 0 : 0
         };
@@ -144,8 +145,11 @@ chatRoutes.get('/threads/:id/messages', async (req, res) => {
 chatRoutes.post('/threads/:id/messages', async (req, res) => {
   try {
     const { id } = req.params;
-    const { senderId, content, senderName, senderPicture } = req.body || {};
-    if (!senderId || !content?.trim()) return res.status(400).json({ error: 'senderId and content required' });
+    const { senderId, content, imageUrl, senderName, senderPicture } = req.body || {};
+    const trimmed = content?.trim();
+    if (!senderId || (!trimmed && !imageUrl)) {
+      return res.status(400).json({ error: 'senderId and content or image required' });
+    }
 
     const thread = await prisma.chatThread.findUnique({ where: { id } });
     if (!thread) return res.status(404).json({ error: 'thread not found' });
@@ -157,10 +161,12 @@ chatRoutes.post('/threads/:id/messages', async (req, res) => {
       data: {
         threadId: id,
         senderId,
-        content: content.trim(),
+        content: trimmed || null,
+        imageUrl: imageUrl || null,
         readByBuyer: role === 'buyer',
         readBySeller: role === 'seller'
-      }
+      },
+      include: { sender: { select: { id: true, name: true, picture: true } } }
     });
 
     await prisma.chatThread.update({
@@ -172,8 +178,16 @@ chatRoutes.post('/threads/:id/messages', async (req, res) => {
       try {
         await prisma.user.upsert({
           where: { id: senderId },
-          create: { id: senderId, email: senderId + '@google', name: senderName, picture: senderPicture },
-          update: { name: senderName, picture: senderPicture }
+          create: {
+            id: senderId,
+            email: senderId + '@google',
+            name: senderName || null,
+            picture: senderPicture || null
+          },
+          update: {
+            ...(senderName !== undefined ? { name: senderName } : {}),
+            ...(senderPicture !== undefined ? { picture: senderPicture } : {})
+          }
         });
       } catch (e) {
         console.error('[Chats] upsert sender', e);

@@ -32,6 +32,14 @@ yarn-error.log*
 # Prisma
 prisma/*.db
 prisma/*.db-journal
+server/prisma/*.db
+server/prisma/*.db-journal
+
+# Uploads
+uploads/
+
+# Local artifacts
+server/npm
 
 # Test
 coverage/

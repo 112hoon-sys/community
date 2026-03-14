@@ -1,8 +1,12 @@
 ﻿// 媛쒕컻 ??Vite proxy ?ъ슜: /api -> localhost:3001
 const API_URL = import.meta.env.VITE_API_URL || '';
 
+function buildUrl(path) {
+  return `${API_URL}${path}`;
+}
+
 async function api(path, options = {}) {
-  const res = await fetch(`${API_URL}${path}`, {
+  const res = await fetch(buildUrl(path), {
     headers: { 'Content-Type': 'application/json', ...options.headers },
     ...options
   });
@@ -91,13 +95,16 @@ export async function translateText(text, target) {
 export async function uploadImage(file) {
   const formData = new FormData();
   formData.append('image', file);
-  const res = await fetch('/api/upload/image', {
+  const res = await fetch(buildUrl('/api/upload/image'), {
     method: 'POST',
     body: formData
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
-    throw new Error(err.error || res.statusText);
+    if (res.status === 413) {
+      throw new Error(err.error || '파일은 10MB 이하만 업로드할 수 있습니다.');
+    }
+    throw new Error(err.error || res.statusText || '업로드 실패');
   }
   return res.json();
 }
@@ -134,5 +141,21 @@ export async function savePushSubscription(data) {
 
 export async function removePushSubscription(data) {
   return api('/api/push/unsubscribe', { method: 'POST', body: JSON.stringify(data) });
+}
+
+export async function updateUserProfile(userId, data) {
+  return api(`/api/users/${userId}`, { method: 'PATCH', body: JSON.stringify(data) });
+}
+
+export async function fetchCommunityRooms() {
+  return api('/api/rooms');
+}
+
+export async function fetchCommunityMessages(roomId) {
+  return api(`/api/rooms/${roomId}/messages`);
+}
+
+export async function sendCommunityMessage(roomId, data) {
+  return api(`/api/rooms/${roomId}/messages`, { method: 'POST', body: JSON.stringify(data) });
 }
 

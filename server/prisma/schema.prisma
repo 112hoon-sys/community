@@ -19,6 +19,7 @@ model User {
   buyerThreads  ChatThread[]  @relation("BuyerThreads")
   sellerThreads ChatThread[]  @relation("SellerThreads")
   chatMessages  ChatMessage[]
+  communityMessages CommunityMessage[]
 }
 
 model Board {
@@ -99,12 +100,34 @@ model ChatMessage {
   id           String     @id @default(cuid())
   threadId     String
   senderId     String
-  content      String
+  content      String?
+  imageUrl     String?
   createdAt    DateTime   @default(now())
   readByBuyer  Boolean    @default(false)
   readBySeller Boolean    @default(false)
   thread       ChatThread @relation(fields: [threadId], references: [id])
   sender       User       @relation(fields: [senderId], references: [id])
+}
+
+model CommunityRoom {
+  id          String            @id @default(cuid())
+  key         String            @unique
+  nameKo      String
+  nameEn      String
+  description String?
+  createdAt   DateTime          @default(now())
+  messages    CommunityMessage[]
+}
+
+model CommunityMessage {
+  id        String        @id @default(cuid())
+  roomId    String
+  senderId  String
+  content   String?
+  imageUrl  String?
+  createdAt DateTime      @default(now())
+  room      CommunityRoom @relation(fields: [roomId], references: [id])
+  sender    User          @relation(fields: [senderId], references: [id])
 }
 
 model PushSubscription {

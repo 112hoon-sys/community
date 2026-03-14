@@ -11,6 +11,8 @@ import BoardPage from './pages/BoardPage';
 import PostDetailPage from './pages/PostDetailPage';
 import PostWritePage from './pages/PostWritePage';
 import LoginPage from './pages/LoginPage';
+import ProfilePage from './pages/ProfilePage';
+import CommunityRoomPage from './pages/CommunityRoomPage';
 import './index.css';
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || 'dummy-id.apps.googleusercontent.com';
@@ -29,6 +31,8 @@ function App() {
             <Route path="post/:id" element={<PostDetailPage />} />
             <Route path="post/new" element={<PostWritePage />} />
             <Route path="login" element={<LoginPage />} />
+            <Route path="profile" element={<ProfilePage />} />
+            <Route path="community/:roomId" element={<CommunityRoomPage />} />
           </Route>
         </Routes>
       </BrowserRouter>

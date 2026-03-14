@@ -23,13 +23,21 @@ const storage = multer.diskStorage({
 
 const upload = multer({
   storage,
-  limits: { fileSize: 5 * 1024 * 1024 }
+  limits: { fileSize: 10 * 1024 * 1024 }
 });
 
-uploadRoutes.post('/image', upload.single('image'), (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({ error: '파일이 없습니다.' });
-  }
-  const url = `/uploads/${req.file.filename}`;
-  res.json({ url });
+uploadRoutes.post('/image', (req, res) => {
+  upload.single('image')(req, res, (err) => {
+    if (err) {
+      if (err.code === 'LIMIT_FILE_SIZE') {
+        return res.status(413).json({ error: '파일은 10MB 이하만 업로드할 수 있습니다.' });
+      }
+      return res.status(500).json({ error: '업로드 중 오류가 발생했습니다.' });
+    }
+    if (!req.file) {
+      return res.status(400).json({ error: '파일이 없습니다.' });
+    }
+    const url = `/uploads/${req.file.filename}`;
+    return res.json({ url });
+  });
 });

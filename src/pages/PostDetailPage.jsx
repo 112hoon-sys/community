@@ -16,7 +16,8 @@ import {
   fetchChatMessages,
   sendChatMessage,
   markChatRead,
-  fetchChatUnreadCount
+  fetchChatUnreadCount,
+  uploadImage
 } from '../lib/api';
 import { Heart, MessageCircle, Share2, MessageSquare, X } from 'lucide-react';
 
@@ -37,19 +38,32 @@ export default function PostDetailPage() {
   const [activeThread, setActiveThread] = useState(null);
   const [chatMessages, setChatMessages] = useState([]);
   const [chatInput, setChatInput] = useState('');
+  const [chatImageFile, setChatImageFile] = useState(null);
+  const [chatImagePreview, setChatImagePreview] = useState('');
   const [chatUnread, setChatUnread] = useState(0);
   const [chatLoading, setChatLoading] = useState(false);
 
   useEffect(() => {
-    fetchPost(id)
-      .then((p) => {
-        setPost(p);
-        if (user) {
-          return fetchLikes(id, user.sub).then((r) => setLiked(r.liked));
-        }
-      })
-      .catch(() => setPost(null))
-      .finally(() => setLoading(false));
+    let mounted = true;
+    const load = () => {
+      fetchPost(id)
+        .then((p) => {
+          if (!mounted) return;
+          setPost(p);
+          if (user) {
+            return fetchLikes(id, user.sub).then((r) => mounted && setLiked(r.liked));
+          }
+          return undefined;
+        })
+        .catch(() => mounted && setPost(null))
+        .finally(() => mounted && setLoading(false));
+    };
+    load();
+    const intervalId = setInterval(load, 5000);
+    return () => {
+      mounted = false;
+      clearInterval(intervalId);
+    };
   }, [id, user?.sub]);
 
   const isOwner = user && post && post.authorId === user.sub;
@@ -71,6 +85,19 @@ export default function PostDetailPage() {
   useEffect(() => {
     refreshUnread();
   }, [post?.id, user?.sub, post?.board?.key]);
+
+  useEffect(() => {
+    if (!chatOpen || !activeThread?.id) return;
+    const intervalId = setInterval(async () => {
+      try {
+        const msgs = await fetchChatMessages(activeThread.id);
+        setChatMessages(msgs);
+      } catch (e) {
+        console.error(e);
+      }
+    }, 3000);
+    return () => clearInterval(intervalId);
+  }, [chatOpen, activeThread?.id]);
 
   const loadMessages = async (threadId) => {
     if (!threadId) return;
@@ -126,19 +153,30 @@ export default function PostDetailPage() {
 
   const handleSendChat = async (e) => {
     e.preventDefault();
-    if (!chatInput.trim() || !activeThread) return;
+    if ((!chatInput.trim() && !chatImageFile) || !activeThread) return;
     try {
+      let imageUrl = '';
+      if (chatImageFile) {
+        const { url } = await uploadImage(chatImageFile);
+        imageUrl = url;
+      }
       const msg = await sendChatMessage(activeThread.id, {
         senderId: user.sub,
         content: chatInput.trim(),
+        imageUrl,
         senderName: user?.name,
         senderPicture: user?.picture
       });
       setChatMessages((prev) => [
         ...prev,
-        { ...msg, sender: { id: user.sub, name: user.name, picture: user.picture } }
+        {
+          ...msg,
+          sender: msg.sender || { id: user.sub, name: user.name, picture: user.picture }
+        }
       ]);
       setChatInput('');
+      setChatImageFile(null);
+      setChatImagePreview('');
       await refreshUnread();
     } catch (e) {
       console.error(e);
@@ -220,8 +258,8 @@ export default function PostDetailPage() {
         <div className="post-detail-header">
           <img
             src={
-              post.imageUrl ||
               post.author?.picture ||
+              post.imageUrl ||
               'https://ui-avatars.com/api/?name=' + (post.author?.name || '?')
             }
             alt=""
@@ -475,7 +513,10 @@ export default function PostDetailPage() {
                         className={`chat-message ${m.senderId === user?.sub ? 'me' : 'them'}`}
                       >
                         <div className="chat-bubble">
-                          <TranslatableText text={m.content} tag="span" />
+                          {m.content && <TranslatableText text={m.content} tag="span" />}
+                          {m.imageUrl && (
+                            <img src={m.imageUrl} alt="첨부 이미지" className="chat-image" />
+                          )}
                           <time>
                             {new Date(m.createdAt).toLocaleTimeString('ko-KR', {
                               hour: '2-digit',
@@ -494,10 +535,37 @@ export default function PostDetailPage() {
                   placeholder={t.chatInputPlaceholder || '메시지 입력'}
                   disabled={!activeThread}
                 />
-                <button type="submit" disabled={!chatInput.trim() || !activeThread}>
+                <label className="chat-upload">
+                  사진
+                  <input
+                    type="file"
+                    accept="image/*"
+                    disabled={!activeThread}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      setChatImageFile(file || null);
+                      setChatImagePreview(file ? URL.createObjectURL(file) : '');
+                    }}
+                  />
+                </label>
+                <button type="submit" disabled={(!chatInput.trim() && !chatImageFile) || !activeThread}>
                   {t.chatSend || '전송'}
                 </button>
               </form>
+              {chatImagePreview && (
+                <div className="chat-image-preview">
+                  <img src={chatImagePreview} alt="미리보기" />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setChatImageFile(null);
+                      setChatImagePreview('');
+                    }}
+                  >
+                    삭제
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </>
