@@ -37,7 +37,8 @@ uploadRoutes.post('/image', (req, res) => {
     if (!req.file) {
       return res.status(400).json({ error: '파일이 없습니다.' });
     }
-    const url = `/uploads/${req.file.filename}`;
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    const url = `${baseUrl}/uploads/${req.file.filename}`;
     return res.json({ url });
   });
 });

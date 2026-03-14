@@ -5,7 +5,8 @@ import {
   fetchCommunityRooms,
   fetchCommunityMessages,
   sendCommunityMessage,
-  uploadImage
+  uploadImage,
+  resolveMediaUrl
 } from '../lib/api';
 import TranslatableText from '../components/TranslatableText';
 
@@ -123,7 +124,7 @@ export default function CommunityRoomPage() {
               <div className="chat-bubble">
                 <div className="chat-sender">
                   {m.sender?.picture ? (
-                    <img src={m.sender.picture} alt="" className="chat-avatar" />
+                    <img src={resolveMediaUrl(m.sender.picture)} alt="" className="chat-avatar" />
                   ) : (
                     <div className="chat-avatar chat-avatar-fallback">{m.sender?.name?.[0] || '?'}</div>
                   )}
@@ -131,7 +132,7 @@ export default function CommunityRoomPage() {
                 </div>
                 {m.content && <TranslatableText text={m.content} tag="span" />}
                 {m.imageUrl && (
-                  <img src={m.imageUrl} alt="첨부 이미지" className="chat-image" />
+                  <img src={resolveMediaUrl(m.imageUrl)} alt="첨부 이미지" className="chat-image" />
                 )}
                 <time>
                   {new Date(m.createdAt).toLocaleTimeString('ko-KR', {

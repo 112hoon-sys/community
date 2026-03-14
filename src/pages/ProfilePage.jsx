@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { updateUserProfile, uploadImage } from '../lib/api';
+import { updateUserProfile, uploadImage, resolveMediaUrl } from '../lib/api';
 
 export default function ProfilePage() {
   const navigate = useNavigate();
@@ -55,7 +55,7 @@ export default function ProfilePage() {
       <form onSubmit={handleSave} className="profile-form">
         <div className="profile-avatar">
           {imagePreview ? (
-            <img src={imagePreview} alt="" />
+            <img src={resolveMediaUrl(imagePreview)} alt="" />
           ) : (
             <div className="profile-avatar-fallback">{nickname?.[0] || '?'}</div>
           )}

@@ -5,6 +5,13 @@ function buildUrl(path) {
   return `${API_URL}${path}`;
 }
 
+export function resolveMediaUrl(url) {
+  if (!url) return url;
+  if (/^https?:\/\//i.test(url)) return url;
+  if (url.startsWith('/uploads')) return `${API_URL}${url}`;
+  return url;
+}
+
 async function api(path, options = {}) {
   const res = await fetch(buildUrl(path), {
     headers: { 'Content-Type': 'application/json', ...options.headers },

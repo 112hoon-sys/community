@@ -17,7 +17,8 @@ import {
   sendChatMessage,
   markChatRead,
   fetchChatUnreadCount,
-  uploadImage
+  uploadImage,
+  resolveMediaUrl
 } from '../lib/api';
 import { Heart, MessageCircle, Share2, MessageSquare, X } from 'lucide-react';
 
@@ -258,8 +259,8 @@ export default function PostDetailPage() {
         <div className="post-detail-header">
           <img
             src={
-              post.author?.picture ||
-              post.imageUrl ||
+              resolveMediaUrl(post.author?.picture) ||
+              resolveMediaUrl(post.imageUrl) ||
               'https://ui-avatars.com/api/?name=' + (post.author?.name || '?')
             }
             alt=""
@@ -302,7 +303,7 @@ export default function PostDetailPage() {
         {post.imageUrl && (
           <div style={{ marginBottom: 16 }}>
             <img
-              src={post.imageUrl}
+              src={resolveMediaUrl(post.imageUrl)}
               alt={post.title}
               style={{ maxWidth: '100%', borderRadius: 16 }}
             />
@@ -352,7 +353,7 @@ export default function PostDetailPage() {
           {(post.comments || []).map((c) => (
             <div key={c.id} className="comment-item">
               <img
-                src={c.author?.picture || 'https://ui-avatars.com/api/?name=' + (c.author?.name || '?')}
+                src={resolveMediaUrl(c.author?.picture) || 'https://ui-avatars.com/api/?name=' + (c.author?.name || '?')}
                 alt=""
                 className="comment-avatar"
               />
@@ -515,7 +516,7 @@ export default function PostDetailPage() {
                         <div className="chat-bubble">
                           {m.content && <TranslatableText text={m.content} tag="span" />}
                           {m.imageUrl && (
-                            <img src={m.imageUrl} alt="첨부 이미지" className="chat-image" />
+                            <img src={resolveMediaUrl(m.imageUrl)} alt="첨부 이미지" className="chat-image" />
                           )}
                           <time>
                             {new Date(m.createdAt).toLocaleTimeString('ko-KR', {

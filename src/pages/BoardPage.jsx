@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import TranslatableText from '../components/TranslatableText';
 import { BOARDS } from '../config/boards';
 import { useAuth } from '../contexts/AuthContext';
-import { fetchPosts, fetchCommunityRooms } from '../lib/api';
+import { fetchPosts, fetchCommunityRooms, resolveMediaUrl } from '../lib/api';
 import { Heart, MessageCircle } from 'lucide-react';
 
 const roomFlags = {
@@ -113,8 +113,8 @@ export default function BoardPage() {
                 <div className="post-item-header">
                 <img
                   src={
-                    post.author?.picture ||
-                    post.imageUrl ||
+                    resolveMediaUrl(post.author?.picture) ||
+                    resolveMediaUrl(post.imageUrl) ||
                     'https://ui-avatars.com/api/?name=' + (post.author?.name || '?')
                   }
                   alt=""

@@ -2,7 +2,7 @@
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 import LangSelector from './LangSelector';
-import { fetchPosts, fetchNotifications, fetchCommunityRooms } from '../lib/api';
+import { fetchPosts, fetchNotifications, fetchCommunityRooms, resolveMediaUrl } from '../lib/api';
 import TranslatableText from './TranslatableText';
 import { useAuth } from '../contexts/AuthContext';
 import {
@@ -987,7 +987,7 @@ const MOCK_TRENDING_EN = [
                         <div
                           className="avatar"
                           style={{
-                            backgroundImage: `url(${post.authorPicture || post.imageUrl})`,
+                            backgroundImage: `url(${resolveMediaUrl(post.authorPicture) || resolveMediaUrl(post.imageUrl)})`,
                             backgroundSize: 'cover',
                             backgroundPosition: 'center'
                           }}

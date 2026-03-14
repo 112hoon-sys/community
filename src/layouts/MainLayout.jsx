@@ -3,6 +3,7 @@ import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { Home, FileText, User } from 'lucide-react';
+import { resolveMediaUrl } from '../lib/api';
 
 export default function MainLayout() {
   const location = useLocation();
@@ -31,7 +32,7 @@ export default function MainLayout() {
               <Link to="/profile" className={`nav-user ${location.pathname === '/profile' ? 'active' : ''}`}>
                 <div className="avatar-wrapper">
                   {user.picture ? (
-                    <img src={user.picture} alt="" className="avatar-img" />
+                    <img src={resolveMediaUrl(user.picture)} alt="" className="avatar-img" />
                   ) : (
                     <div className="avatar-fallback">{user.name?.[0] || '?'}</div>
                   )}
