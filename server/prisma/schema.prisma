@@ -1,0 +1,121 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String        @id @default(cuid())
+  email         String        @unique
+  name          String?
+  picture       String?
+  createdAt     DateTime      @default(now())
+  posts         Post[]
+  comments      Comment[]
+  likes         Like[]
+  buyerThreads  ChatThread[]  @relation("BuyerThreads")
+  sellerThreads ChatThread[]  @relation("SellerThreads")
+  chatMessages  ChatMessage[]
+}
+
+model Board {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  nameKo      String
+  nameEn      String
+  description String?
+  createdAt   DateTime @default(now())
+  posts       Post[]
+}
+
+model Post {
+  id        String   @id @default(cuid())
+  title     String
+  content   String
+  imageUrl  String?
+  authorId  String
+  boardId   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  author    User     @relation(fields: [authorId], references: [id])
+  board     Board    @relation(fields: [boardId], references: [id])
+  comments  Comment[]
+  likes     Like[]
+  chatThreads ChatThread[]
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  content   String
+  authorId  String
+  postId    String
+  createdAt DateTime @default(now())
+  author    User     @relation(fields: [authorId], references: [id])
+  post      Post     @relation(fields: [postId], references: [id])
+}
+
+model Like {
+  id        String   @id @default(cuid())
+  authorId  String
+  postId    String
+  createdAt DateTime @default(now())
+  author    User     @relation(fields: [authorId], references: [id])
+  post      Post     @relation(fields: [postId], references: [id])
+
+  @@unique([authorId, postId])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String   // 'comment' | 'like' | 'chat'
+  postId    String
+  actorId   String
+  actorName String?
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model ChatThread {
+  id            String       @id @default(cuid())
+  postId        String
+  buyerId       String
+  sellerId      String
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  lastMessageAt DateTime?
+  post          Post         @relation(fields: [postId], references: [id])
+  buyer         User         @relation("BuyerThreads", fields: [buyerId], references: [id])
+  seller        User         @relation("SellerThreads", fields: [sellerId], references: [id])
+  messages      ChatMessage[]
+
+  @@unique([postId, buyerId])
+}
+
+model ChatMessage {
+  id           String     @id @default(cuid())
+  threadId     String
+  senderId     String
+  content      String
+  createdAt    DateTime   @default(now())
+  readByBuyer  Boolean    @default(false)
+  readBySeller Boolean    @default(false)
+  thread       ChatThread @relation(fields: [threadId], references: [id])
+  sender       User       @relation(fields: [senderId], references: [id])
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+

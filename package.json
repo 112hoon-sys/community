@@ -1,0 +1,26 @@
+{
+  "name": "k-connect-community",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "server": "node server/index.js",
+    "dev:all": "concurrently \"npm run dev\" \"npm run server\"",
+    "db:seed": "node server/prisma/seed.js"
+  },
+  "dependencies": {
+    "@react-oauth/google": "^0.12.1",
+    "lucide-react": "^0.464.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.28.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "concurrently": "^9.1.0",
+    "vite": "^5.4.3"
+  }
+}
