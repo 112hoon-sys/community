@@ -68,13 +68,13 @@ export default function LoginPage() {
         Google로 로그인
       </button>
 
-      <div style={{ margin: '28px 0 12px', display: 'flex', alignItems: 'center', gap: 8 }}>
+      <div style={{ display: 'none' }}>
         <div style={{ flex: 1, height: 1, background: '#EBEBEB' }} />
         <span style={{ fontSize: 12, color: '#ADB5BD', whiteSpace: 'nowrap' }}>테스트 계정으로 입장</span>
         <div style={{ flex: 1, height: 1, background: '#EBEBEB' }} />
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+      <div style={{ display: 'none' }}>
         {TEST_USERS.map((user) => (
           <button
             key={user.sub}
