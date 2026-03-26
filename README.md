@@ -78,4 +78,4 @@ npm run dev:all
 - **Frontend**: React 18, Vite, React Router, Google OAuth
 - **Backend**: Node.js, Express, Prisma
 - **DB**: SQLite
-- **환율**: SBI 코스머니 14개국 (fallback: ExchangeRate-API)
+
